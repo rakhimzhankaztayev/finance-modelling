@@ -9,7 +9,8 @@
 </head>
 <body>
 
-<div class="container"> <h1>Финансовое Моделирование</h1>
+<div class="container">
+    <h1>Финансовое Моделирование</h1>
     
     <div class="card">
         <h2>1. Личный Бюджет</h2>
@@ -23,7 +24,7 @@
             <label>Расходы:</label>
             <div id="expensesList">
                 <div class="expense-row">
-                    <input type="text" placeholder="Название (Питание)" class="exp-name">
+                    <input type="text" placeholder="Название" class="exp-name">
                     <input type="number" value="0" class="exp-cost" oninput="calculateBudget()">
                 </div>
             </div>
@@ -32,6 +33,7 @@
 
         <div class="result" id="budgetResult">Баланс: 0 ₸</div>
     </div>
+
     <div class="card">
         <h2>2. Депозит vs Инфляция</h2>
         <div class="input-group">
@@ -51,7 +53,10 @@
             <input type="number" id="inflationRate" value="8">
         </div>
         <button onclick="calculateDeposit()">Рассчитать</button>
-        <canvas id="depositChart"></canvas>
+        
+        <div class="chart-container">
+            <canvas id="depositChart"></canvas>
+        </div>
     </div>
 
     <div class="card">
@@ -75,6 +80,7 @@
         </div>
     </div>
 
-</div> <script src="script.js"></script>
+</div> 
+<script src="script.js"></script>
 </body>
 </html>

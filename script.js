@@ -1,6 +1,8 @@
 // Слушаем изменение дохода
 document.getElementById('income').addEventListener('input', calculateBudget);
 
+// --- 1. БЮДЖЕТ (Динамический список) ---
+
 // Функция добавления новой строки расхода
 function addExpenseRow() {
     const list = document.getElementById('expensesList');
@@ -9,7 +11,7 @@ function addExpenseRow() {
     const div = document.createElement('div');
     div.className = 'expense-row';
     
-    // Вставляем внутрь два инпута
+    // Вставляем внутрь два инпута: название и цену
     div.innerHTML = `
         <input type="text" placeholder="Название" class="exp-name">
         <input type="number" value="0" class="exp-cost" oninput="calculateBudget()">
@@ -18,7 +20,7 @@ function addExpenseRow() {
     list.appendChild(div); // Добавляем на страницу
 }
 
-// 1. БЮДЖЕТ (Обновленная логика)
+// Функция расчета бюджета
 function calculateBudget() {
     let incomeInput = document.getElementById('income');
     let income = incomeInput.value ? Number(incomeInput.value) : 0;
@@ -34,20 +36,23 @@ function calculateBudget() {
     let balance = income - totalExpense;
     let savingsRate = 0;
     
+    // Рассчитываем процент сбережений
     if (income > 0) {
         savingsRate = (balance / income) * 100;
     }
 
+    // Формируем текст результата
     let resultText = `Всего расходов: ${totalExpense} ₸\nОстаток: ${balance} ₸`;
     let resultBox = document.getElementById('budgetResult');
     
+    // Меняем цвет в зависимости от результата
     if (balance > 0) {
         resultText += `\nРекомендуется откладывать 20% от остатка: ${(balance * 0.2).toFixed(0)} ₸`;
-        resultBox.style.color = "#2e7d32";
+        resultBox.style.color = "#2e7d32"; // Зеленый
         resultBox.style.backgroundColor = "#e8f5e9";
     } else if (balance < 0) {
         resultText += `\nВнимание! Вы ушли в минус.`;
-        resultBox.style.color = "#c62828";
+        resultBox.style.color = "#c62828"; // Красный
         resultBox.style.backgroundColor = "#ffebee";
     } else {
         resultText += `\nВы тратите всё под ноль.`;
@@ -58,7 +63,10 @@ function calculateBudget() {
     resultBox.innerText = resultText;
 }
 
-// --- 2. НАКОПЛЕНИЯ ---
+
+// --- 2. НАКОПЛЕНИЯ (График) ---
+let depositChartInstance = null;
+
 function calculateDeposit() {
     let S0 = Number(document.getElementById('depositAmount').value);
     let p = Number(document.getElementById('depositRate').value);
@@ -72,21 +80,23 @@ function calculateDeposit() {
     for (let i = 0; i <= t; i++) {
         yearsLabel.push(i + " год");
         
-        // Формула сложного процента
+        // Сложный процент
         let nominal = S0 * Math.pow((1 + p / 100), i);
         nominalData.push(nominal);
 
-        // Формула с учетом инфляции
+        // Учет инфляции
         let real = nominal / Math.pow((1 + inf / 100), i);
         realData.push(real);
     }
 
     const ctx = document.getElementById('depositChart').getContext('2d');
     
+    // Если график уже есть - удаляем его перед созданием нового
     if (depositChartInstance) {
         depositChartInstance.destroy();
     }
 
+    // Рисуем новый график
     depositChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -109,6 +119,7 @@ function calculateDeposit() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true,
@@ -117,7 +128,8 @@ function calculateDeposit() {
                     font: { size: 16 }
                 },
                 legend: {
-                    labels: { color: '#333' }
+                    labels: { color: '#333' },
+                    position: 'bottom' 
                 }
             },
             scales: {
@@ -128,7 +140,9 @@ function calculateDeposit() {
     });
 }
 
-// --- 3. КРЕДИТ ---
+
+// --- 3. КРЕДИТ (Аннуитет) ---
+
 function calculateLoan() {
     let K = Number(document.getElementById('loanAmount').value);
     let r_yearly = Number(document.getElementById('loanRate').value);
@@ -154,5 +168,5 @@ function calculateLoan() {
         Переплата банку: ${Math.round(overpayment)} ₸`;
 }
 
-// Запустить расчет бюджета сразу при загрузке страницы
+// Запускаем расчет бюджета один раз при старте
 calculateBudget();

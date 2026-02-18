@@ -1,5 +1,6 @@
-// Слушаем изменение дохода
 document.getElementById('income').addEventListener('input', calculateBudget);
+
+let depositChartInstance = null;
 
 // --- 1. БЮДЖЕТ (Динамический список) ---
 
@@ -34,13 +35,7 @@ function calculateBudget() {
     });
     
     let balance = income - totalExpense;
-    let savingsRate = 0;
     
-    // Рассчитываем процент сбережений
-    if (income > 0) {
-        savingsRate = (balance / income) * 100;
-    }
-
     // Формируем текст результата
     let resultText = `Всего расходов: ${totalExpense} ₸\nОстаток: ${balance} ₸`;
     let resultBox = document.getElementById('budgetResult');
@@ -65,7 +60,6 @@ function calculateBudget() {
 
 
 // --- 2. НАКОПЛЕНИЯ (График) ---
-let depositChartInstance = null;
 
 function calculateDeposit() {
     let S0 = Number(document.getElementById('depositAmount').value);
@@ -119,7 +113,7 @@ function calculateDeposit() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: false, // ВАЖНО: Разрешает графику растягиваться на телефоне
             plugins: {
                 title: {
                     display: true,
@@ -129,7 +123,7 @@ function calculateDeposit() {
                 },
                 legend: {
                     labels: { color: '#333' },
-                    position: 'bottom' 
+                    position: 'bottom'
                 }
             },
             scales: {

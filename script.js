@@ -1,47 +1,62 @@
-// Автоматический запуск расчета бюджета при изменении цифр
+// Слушаем изменение дохода
 document.getElementById('income').addEventListener('input', calculateBudget);
-document.getElementById('expenses').addEventListener('input', calculateBudget);
 
-// --- 1. БЮДЖЕТ ---
+// Функция добавления новой строки расхода
+function addExpenseRow() {
+    const list = document.getElementById('expensesList');
+    
+    // Создаем новый div
+    const div = document.createElement('div');
+    div.className = 'expense-row';
+    
+    // Вставляем внутрь два инпута
+    div.innerHTML = `
+        <input type="text" placeholder="Название" class="exp-name">
+        <input type="number" value="0" class="exp-cost" oninput="calculateBudget()">
+    `;
+    
+    list.appendChild(div); // Добавляем на страницу
+}
+
+// 1. БЮДЖЕТ (Обновленная логика)
 function calculateBudget() {
     let incomeInput = document.getElementById('income');
-    let expenseInput = document.getElementById('expenses');
-
-    // Если поля пустые, считаем их равными 0 (защита от ошибок)
     let income = incomeInput.value ? Number(incomeInput.value) : 0;
-    let expense = expenseInput.value ? Number(expenseInput.value) : 0;
     
-    let balance = income - expense;
+    // Считаем сумму всех расходов
+    let totalExpense = 0;
+    let expenseInputs = document.querySelectorAll('.exp-cost'); // Берем все поля с ценами
+    
+    expenseInputs.forEach(function(input) {
+        totalExpense += Number(input.value);
+    });
+    
+    let balance = income - totalExpense;
     let savingsRate = 0;
     
     if (income > 0) {
         savingsRate = (balance / income) * 100;
     }
 
-    let resultText = `Баланс: ${balance} ₸`;
-    
-    // Логика цвета и текста
+    let resultText = `Всего расходов: ${totalExpense} ₸\nОстаток: ${balance} ₸`;
     let resultBox = document.getElementById('budgetResult');
     
     if (balance > 0) {
-        resultText += `\nВы можете сберегать ${savingsRate.toFixed(1)}% от дохода.`;
-        resultBox.style.color = "#2e7d32"; // Зеленый текст
-        resultBox.style.backgroundColor = "#e8f5e9"; // Зеленый фон
+        resultText += `\nРекомендуется откладывать 20% от остатка: ${(balance * 0.2).toFixed(0)} ₸`;
+        resultBox.style.color = "#2e7d32";
+        resultBox.style.backgroundColor = "#e8f5e9";
     } else if (balance < 0) {
-        resultText += `\nВнимание! Дефицит бюджета.`;
-        resultBox.style.color = "#c62828"; // Красный текст
-        resultBox.style.backgroundColor = "#ffebee"; // Красный фон
+        resultText += `\nВнимание! Вы ушли в минус.`;
+        resultBox.style.color = "#c62828";
+        resultBox.style.backgroundColor = "#ffebee";
     } else {
-        resultText += `\nВыходите в ноль.`;
+        resultText += `\nВы тратите всё под ноль.`;
         resultBox.style.color = "#333";
         resultBox.style.backgroundColor = "#f5f5f5";
     }
     
     resultBox.innerText = resultText;
 }
-
-// Переменная для графика
-let depositChartInstance = null;
 
 // --- 2. НАКОПЛЕНИЯ ---
 function calculateDeposit() {

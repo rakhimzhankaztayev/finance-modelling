@@ -1,37 +1,49 @@
-// Автоматический расчет бюджета при вводе
+// Автоматический запуск расчета бюджета при изменении цифр
 document.getElementById('income').addEventListener('input', calculateBudget);
 document.getElementById('expenses').addEventListener('input', calculateBudget);
 
-// 1. Модель бюджета
-[cite_start]// Формула: B = D - R [cite: 86]
+// --- 1. БЮДЖЕТ ---
 function calculateBudget() {
-    let income = Number(document.getElementById('income').value);
-    let expense = Number(document.getElementById('expenses').value);
+    let incomeInput = document.getElementById('income');
+    let expenseInput = document.getElementById('expenses');
+
+    // Если поля пустые, считаем их равными 0 (защита от ошибок)
+    let income = incomeInput.value ? Number(incomeInput.value) : 0;
+    let expense = expenseInput.value ? Number(expenseInput.value) : 0;
     
     let balance = income - expense;
     let savingsRate = 0;
     
     if (income > 0) {
-        [cite_start]// Формула доли сбережений (S = B/D * 100%) [cite: 88]
         savingsRate = (balance / income) * 100;
     }
 
     let resultText = `Баланс: ${balance} ₸`;
+    
+    // Логика цвета и текста
+    let resultBox = document.getElementById('budgetResult');
+    
     if (balance > 0) {
         resultText += `\nВы можете сберегать ${savingsRate.toFixed(1)}% от дохода.`;
-    } else {
+        resultBox.style.color = "#2e7d32"; // Зеленый текст
+        resultBox.style.backgroundColor = "#e8f5e9"; // Зеленый фон
+    } else if (balance < 0) {
         resultText += `\nВнимание! Дефицит бюджета.`;
+        resultBox.style.color = "#c62828"; // Красный текст
+        resultBox.style.backgroundColor = "#ffebee"; // Красный фон
+    } else {
+        resultText += `\nВыходите в ноль.`;
+        resultBox.style.color = "#333";
+        resultBox.style.backgroundColor = "#f5f5f5";
     }
     
-    document.getElementById('budgetResult').innerText = resultText;
+    resultBox.innerText = resultText;
 }
 
-// Переменная для графика, чтобы можно было его обновлять
+// Переменная для графика
 let depositChartInstance = null;
 
-// 2. Модель накоплений и инфляции
-[cite_start]// Формула сложного процента: S = S0 * (1 + p/100)^t [cite: 107]
-[cite_start]// Формула реальной стоимости (инфляция): R = S / (1 + i/100)^t [cite: 161]
+// --- 2. НАКОПЛЕНИЯ ---
 function calculateDeposit() {
     let S0 = Number(document.getElementById('depositAmount').value);
     let p = Number(document.getElementById('depositRate').value);
@@ -45,16 +57,15 @@ function calculateDeposit() {
     for (let i = 0; i <= t; i++) {
         yearsLabel.push(i + " год");
         
-        // Номинальная сумма (сколько будет цифр на счету)
+        // Формула сложного процента
         let nominal = S0 * Math.pow((1 + p / 100), i);
         nominalData.push(nominal);
 
-        // Реальная сумма (покупательная способность с учетом инфляции)
+        // Формула с учетом инфляции
         let real = nominal / Math.pow((1 + inf / 100), i);
         realData.push(real);
     }
 
-    // Отрисовка графика (НАСТРОЙКИ ДЛЯ СВЕТЛОЙ ТЕМЫ)
     const ctx = document.getElementById('depositChart').getContext('2d');
     
     if (depositChartInstance) {
@@ -66,16 +77,16 @@ function calculateDeposit() {
         data: {
             labels: yearsLabel,
             datasets: [{
-                label: 'Номинальная сумма (с %)',
+                label: 'Номинальная сумма',
                 data: nominalData,
-                borderColor: '#28a745', // Темно-зеленый (хорошо видно на белом)
+                borderColor: '#28a745',
                 backgroundColor: 'rgba(40, 167, 69, 0.1)',
                 fill: true,
-                tension: 0.3 // Плавные линии
+                tension: 0.3
             }, {
                 label: 'Реальная стоимость (с инфляцией)',
                 data: realData,
-                borderColor: '#dc3545', // Темно-красный
+                borderColor: '#dc3545',
                 borderDash: [5, 5], 
                 fill: false,
                 tension: 0.3
@@ -86,40 +97,31 @@ function calculateDeposit() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Влияние инфляции на накопления',
-                    color: '#333333', // ТЕМНЫЙ ЦВЕТ ЗАГОЛОВКА
+                    text: 'Рост накоплений vs Инфляция',
+                    color: '#333',
                     font: { size: 16 }
                 },
                 legend: {
-                    labels: { color: '#333333' } // ТЕМНЫЙ ЦВЕТ ЛЕГЕНДЫ
+                    labels: { color: '#333' }
                 }
             },
             scales: {
-                y: { 
-                    ticks: { color: '#666666' }, // Темно-серые цифры
-                    grid: { color: '#e0e0e0' }   // Светло-серая сетка
-                },
-                x: { 
-                    ticks: { color: '#666666' }, // Темно-серые цифры
-                    grid: { color: '#e0e0e0' }   // Светло-серая сетка
-                }
+                y: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } },
+                x: { ticks: { color: '#666' }, grid: { color: '#e0e0e0' } }
             }
         }
     });
 }
 
-// 3. Модель кредита (Аннуитет)
-[cite_start]// Формула: A = (K * r * (1+r)^n) / ((1+r)^n - 1) [cite: 143]
+// --- 3. КРЕДИТ ---
 function calculateLoan() {
     let K = Number(document.getElementById('loanAmount').value);
     let r_yearly = Number(document.getElementById('loanRate').value);
     let n_years = Number(document.getElementById('loanTerm').value);
 
-    // Преобразуем ставку в месячную, а срок в месяцы
     let r_monthly = r_yearly / 100 / 12;
     let n_months = n_years * 12;
 
-    // Аннуитетная формула
     let monthlyPayment;
     if (r_monthly === 0) {
         monthlyPayment = K / n_months;
@@ -136,3 +138,6 @@ function calculateLoan() {
         Общая сумма выплат: ${Math.round(totalAmount)} ₸
         Переплата банку: ${Math.round(overpayment)} ₸`;
 }
+
+// Запустить расчет бюджета сразу при загрузке страницы
+calculateBudget();
